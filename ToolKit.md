@@ -1,257 +1,140 @@
-# IT Admin Testing Toolkit
+# 🧰 IT Admin Troubleshooting Toolkit
 
----
+This document provides tools, commands, and techniques for testing, diagnosing, and troubleshooting common issues in Windows and Linux IT environments.
 
-### 🔎 Using Microsoft Autoruns for Deep Analysis
-
-**Autoruns** from Microsoft Sysinternals provides a complete and categorized view of all startup-related entries:
-
-- Logon items
-- Scheduled tasks
-- AppInit DLLs
-- Services
-- Drivers
-- Explorer shell extensions
-
-#### ✅ Launch Autoruns (GUI)
-
-1. Download from:  
-   https://learn.microsoft.com/sysinternals/downloads/autoruns
-
-2. Extract and run:
+## 🧭 Basic Network Troubleshooting and IP/Subnet Reference
 
 ```cmd
-autoruns.exe
+ipconfig /all
+ping 8.8.8.8
+nslookup google.com
 ```
 
-3. Filter out Microsoft entries for easier troubleshooting:
-   - Uncheck **"Hide Microsoft entries"** in the toolbar
-
-#### 🧪 Use CLI Mode (for remote or scripted use)
+## 📶 Show Connected Wi-Fi SSID and Password
 
 ```cmd
-autorunsc.exe -nobanner -h > autoruns_filtered.txt
+netsh wlan show interfaces
+netsh wlan show profile name="SSID" key=clear
 ```
 
-- `-h` hides Microsoft entries
-- `-nobanner` suppresses the Sysinternals intro text
+## 🌐 Finding Your External (Public) IP Address
 
----
+```powershell
+Invoke-RestMethod -Uri "https://api.ipify.org?format=text"
+```
 
-### 💡 Live Share or Field Diagnostic Use
+## 💾 Check Installed RAM and Storage via Command Line
 
-If troubleshooting a client PC:
+```powershell
+Get-CimInstance Win32_PhysicalMemory
+Get-PhysicalDisk
+```
 
-- Place **Autoruns** on a network share or USB stick
-- Launch directly:
+## 🔐 Password Reset – SYSTEM Hive CmdLine Method
 
 ```cmd
-\live-share\tools\autoruns\autoruns.exe
+reg load HKLM\offline D:\Windows\System32\Config\SYSTEM
+reg add "HKLM\offline\Setup" /v CmdLine /t REG_SZ /d "cmd.exe" /f
+reg add "HKLM\offline\Setup" /v SetupType /t REG_DWORD /d 2 /f
+reg unload HKLM\offline
 ```
 
-Or map the share:
+## 🚀 Startup Programs – Identifying Non-Microsoft Auto-Starts
 
 ```cmd
-net use Z: \live-share\tools
-Z:\autoruns\autoruns.exe
+wmic startup get caption, command
+Get-ItemProperty HKCU:\Software\Microsoft\Windows\CurrentVersion\Run
 ```
 
-This avoids leaving tools permanently on the client system.
+Use [Autoruns](https://live.sysinternals.com/tools/autoruns.exe) from Microsoft Sysinternals.
 
----
+## 🌍 Clean Browser Launch for Troubleshooting
 
----
+```cmd
+start chrome --guest
+start firefox -safe-mode
+start msedge --inprivate
+```
 
-## 🌐 Network Activity Tools – TCPView and Netstat
+## 🛡️ Antivirus / Malware Detection with EICAR
 
-### 🛰️ TCPView (Sysinternals)
+Download from: [EICAR test file](https://www.eicar.org/download-anti-malware-testfile/)
 
-**TCPView** provides a real-time list of all TCP and UDP endpoints on your system:
+## 📧 Email Security & SMTP Testing
 
-- Shows process name, PID, local/remote addresses, ports, and connection state
-- Can be sorted and filtered
-- Allows killing or closing connections
+Use:
+- `nslookup -q=mx domain.com`
+- `telnet mail.domain.com 25`
+- Outlook → Test Email AutoConfiguration (`Ctrl + right-click tray icon`)
 
-#### ✅ Download:
-- https://learn.microsoft.com/sysinternals/downloads/tcpview
+## 📨 Autodiscover DNS and Outlook Diagnostics
 
-#### ✅ Launch:
+```powershell
+Test-OutlookConnectivity -ProbeIdentity "OutlookRpcSelfTestProbe"
+```
+
+## 🧰 Booting to Safe Mode and Removing Updates
+
+```cmd
+bcdedit /set {current} safeboot minimal
+```
+
+## 🐧 Linux Update Commands
+
+```bash
+# Debian/Ubuntu
+sudo apt update && sudo apt upgrade
+
+# RHEL/Fedora
+sudo dnf upgrade
+
+# Arch
+sudo pacman -Syu
+```
+
+## 🧬 Active Directory Health Checks
+
+```cmd
+dcdiag /v
+repadmin /replsummary
+```
+
+## 🗄️ SQL Server Testing
+
+```powershell
+Invoke-Sqlcmd -ServerInstance "Server\Instance" -Query "SELECT @@VERSION"
+```
+
+## 🌐 TCPView and Netstat
 
 ```cmd
 tcpview.exe
-```
-
-Use the toolbar to:
-- Refresh quickly
-- Highlight new or closed connections
-- Close or terminate suspicious processes
-
-> Great for catching apps phoning home, malware, or debugging port use.
-
----
-
-### 📡 Netstat (Built-In Windows Tool)
-
-**Netstat** provides snapshot-style network info via command line.
-
-#### ✅ Common Usage:
-
-```cmd
 netstat -ano
 ```
 
-- `-a` = show all connections and listening ports
-- `-n` = show addresses numerically (skip DNS lookup)
-- `-o` = show the owning process ID (PID)
+## 📋 Editing Hosts File Safely
 
-To match PID to process name:
-
-```powershell
-Get-Process -Id <PID>
-```
-
-#### ✅ Example:
-
-```cmd
-netstat -anob
-```
-
-- `-b` shows which executable is responsible for each connection  
-  *(requires elevated CMD)*
-
-> Use this when TCPView isn't available or for scripting.
-
----
-
----
-
-### 💡 Tip: Run Sysinternals Tools Without Downloading
-
-Most Sysinternals tools can be run directly over the internet or from a network share:
-
-#### ✅ Run from Sysinternals Live Share
-
-You can run any tool directly using:
-
-```cmd
-\live.sysinternals.com	ools\ToolName.exe
-```
-
-Examples:
-
-```cmd
-\live.sysinternals.com	oolsutoruns.exe
-\live.sysinternals.com	ools\procexp.exe
-\live.sysinternals.com	ools	cpview.exe
-```
-
-> No need to download manually — just run from the Start → Run dialog or elevated Command Prompt.
-
-#### ✅ Run from Your Own Shared Tools Folder
-
-If deploying tools from a central server, place them on a network share:
-
-```cmd
-\yourserver	oolsutoruns.exe
-\fileserverdmin\sysinternals	cpview.exe
-```
-
-Or map the drive first:
-
-```cmd
-net use Z: \yourserver	ools
-Z:	cpview.exe
-```
-
----
-
-
----
-
-## 🧭 Editing the Windows Hosts File – Protections and Workarounds
-
-The `hosts` file in Windows is commonly used to override DNS resolution, but modern systems implement protections to prevent abuse.
-
-### 📄 Location of the Hosts File
-
-```plaintext
-C:\Windows\System32\drivers\etc\hosts
-```
-
----
-
-### 🔒 Protections That May Interfere
-
-#### 1. UAC and Admin Rights
-
-You must edit the hosts file with elevated permissions:
+Use PowerToys Hosts File Editor or:
 
 ```cmd
 notepad C:\Windows\System32\drivers\etc\hosts
 ```
 
-> Right-click Notepad → **Run as administrator** before opening the file.
+Disable Tamper Protection temporarily if blocked.
+
+## 📱 Microsoft Intune (Endpoint Manager)
+
+```powershell
+dsregcmd /status
+```
+
+## 👤 Listing Local Accounts
+
+```powershell
+Get-LocalUser
+Get-WmiObject Win32_UserAccount | Where-Object { $_.LocalAccount -eq $true }
+```
 
 ---
 
-#### 2. Windows Defender Tamper Protection
-
-Defender may block edits to the hosts file, especially redirections to Microsoft, antivirus, or update domains.
-
-- Disable Tamper Protection (if necessary) from:
-  - **Windows Security** → **Virus & threat protection**
-  - Click **Manage settings**
-  - Turn off **Tamper Protection**
-
-> 🔁 Re-enable it after testing.
-
----
-
-#### 3. Controlled Folder Access or 3rd-party AV
-
-Controlled folder access may block apps from writing to `System32`.
-
-- Add your editor (e.g., Notepad++) to the list of allowed apps.
-
----
-
-### ⚙️ PowerToys Hosts File Editor
-
-Microsoft PowerToys includes a **Hosts File Editor** with built-in elevation and structured UI.
-
-- Download PowerToys: [https://github.com/microsoft/PowerToys](https://github.com/microsoft/PowerToys)
-- Open **PowerToys → Hosts File Editor**
-- Add or edit entries with validation
-
-> 🟢 Useful for quickly enabling/disabling entries or avoiding formatting errors.
-
----
-
-### 🧪 Testing Hosts File Changes
-
-1. Add an entry like:
-
-   ```plaintext
-   127.0.0.1 facebook.com
-   ```
-
-2. Test using:
-
-   ```cmd
-   ping facebook.com
-   ```
-
-   Expected output:
-   ```
-   Pinging facebook.com [127.0.0.1]
-   ```
-
-3. Or flush DNS and test:
-
-   ```cmd
-   ipconfig /flushdns
-   nslookup facebook.com
-   ```
-
----
-
+This document continues to evolve. Use, adapt, and extend to meet your diagnostic needs.
