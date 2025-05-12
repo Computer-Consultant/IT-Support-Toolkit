@@ -1,1065 +1,257 @@
 # IT Admin Testing Toolkit
-*By Mark McDow — My Computer Guru, LLC*
-
-A comprehensive, command-line-friendly reference for testing, monitoring, and verifying system health and configuration for Windows and Linux systems.
 
 ---
 
-## 35. Basic Network Troubleshooting and IP/Subnet Reference
+### 🔎 Using Microsoft Autoruns for Deep Analysis
 
-### 🔍 View Network Details (Windows CMD)
+**Autoruns** from Microsoft Sysinternals provides a complete and categorized view of all startup-related entries:
+
+- Logon items
+- Scheduled tasks
+- AppInit DLLs
+- Services
+- Drivers
+- Explorer shell extensions
+
+#### ✅ Launch Autoruns (GUI)
+
+1. Download from:  
+   https://learn.microsoft.com/sysinternals/downloads/autoruns
+
+2. Extract and run:
 
 ```cmd
-ipconfig /all
+autoruns.exe
 ```
 
-Look for:
+3. Filter out Microsoft entries for easier troubleshooting:
+   - Uncheck **"Hide Microsoft entries"** in the toolbar
 
-- **IPv4 Address** – your current IP (e.g., 192.168.1.50)
-- **Default Gateway** – your router's address
-- **DNS Servers** – current resolver(s)
-
-> If your IP starts with **169.254.x.x**, it means:
-- Your system used **APIPA** (Automatic Private IP Addressing)
-- It could **not obtain a DHCP lease** (check router, DHCP server)
-
----
-
-### 🧪 Common Ping Tests
-
-#### Ping Local Router (Default Gateway)
-
-```cmd
-ping 192.168.1.1
-```
-
-#### Ping External IP (Test Internet)
-
-```cmd
-ping 8.8.8.8
-```
-
-#### Ping External Domain (Test DNS)
-
-```cmd
-ping google.com
-```
-
----
-
-### 📋 Subnet Mask Reference Table
-
-| CIDR  | Subnet Mask     | Usable Hosts | Host Range              |
-|-------|------------------|--------------|--------------------------|
-| /30   | 255.255.255.252 | 2            | x.x.x.1 – x.x.x.2        |
-| /29   | 255.255.255.248 | 6            | x.x.x.1 – x.x.x.6        |
-| /28   | 255.255.255.240 | 14           | x.x.x.1 – x.x.x.14       |
-| /27   | 255.255.255.224 | 30           | x.x.x.1 – x.x.x.30       |
-| /26   | 255.255.255.192 | 62           | x.x.x.1 – x.x.x.62       |
-| /25   | 255.255.255.128 | 126          | x.x.x.1 – x.x.x.126      |
-| /24   | 255.255.255.0   | 254          | x.x.x.1 – x.x.x.254      |
-
-> Usable hosts = total - 2 (network + broadcast)
-
----
-
-### 🔧 Additional Troubleshooting Commands
-
-#### View Routing Table
-
-```cmd
-route print
-```
-
-#### Release/Renew IP
-
-```cmd
-ipconfig /release
-ipconfig /renew
-```
-
-#### Flush DNS Cache
-
-```cmd
-ipconfig /flushdns
-```
-
-#### Traceroute
-
-```cmd
-tracert google.com
-```
-
-#### DNS Resolution Test
-
-```cmd
-nslookup google.com
-```
-
----
-
-
----
-
-### 📧 Autodiscover DNS and Outlook Diagnostics
-
-#### ✅ Test Autodiscover DNS Records (Microsoft 365 / Exchange)
-
-From **PowerShell** (Windows):
-
-```powershell
-Test-OutlookConnectivity -ProbeIdentity "OutlookRpcSelfTestProbe"
-```
-
-Or use **Outlook Test E-mail AutoConfiguration**:
-
-1. Hold **Ctrl** and right-click the Outlook icon in the system tray
-2. Click **"Test E-mail AutoConfiguration"**
-3. Enter email and password, uncheck **"Use Guessmart"**, and click **Test**
-
-Look for:
-- `https://autodiscover.domain.com/autodiscover/autodiscover.xml`
-- DNS SRV and CNAME resolution results
-- Errors in red (e.g., authentication, 401, redirect loop)
-
-#### ✅ External Tools
-
-- **Microsoft Remote Connectivity Analyzer**  
-  [https://testconnectivity.microsoft.com](https://testconnectivity.microsoft.com)  
-  Includes Autodiscover, Outlook Anywhere, and Microsoft 365 tests.
-
----
-
-### 🛠 Microsoft Word / Excel Diagnostics
-
-#### Word & Excel: Repair/Reset
-
-- Go to **Control Panel → Programs → Microsoft 365 → Change**
-- Select **"Quick Repair"** or **"Online Repair"**
-
-#### Safe Mode Launch (No Add-ins):
-
-```cmd
-winword /safe
-excel /safe
-```
-
-> Disables templates, extensions, and startup macros.
-
-#### Detect/Disable Add-ins
-
-1. File → Options → Add-ins
-2. Choose **COM Add-ins** → Manage → Disable anything suspicious
-
-#### Other Useful Tools
-
-- Run **Office Diagnostics** via: `appwiz.cpl → Change Microsoft 365`
-- Use **"Office Telemetry Dashboard"** (enterprise use)
-- Check `%appdata%\Microsoft\Templates` for corrupt `Normal.dotm`
-- Check Excel `.xlb` file in `%appdata%\Microsoft\Excel` for UI layout issues
-
----
-
----
-
-## 34. Show Connected Wi-Fi SSID and Password
-
-### ✅ Get Current SSID
-
-```cmd
-netsh wlan show interfaces
-```
-
-Or:
-
-```powershell
-(Get-NetConnectionProfile).Name
-```
-
-### ✅ Get Saved Wi-Fi Password (replace with your SSID)
-
-```cmd
-netsh wlan show profile name="YourSSID" key=clear
-```
-
-Look for `Key Content`.
-
-### ✅ One-Liner PowerShell Combo
-
-```powershell
-$ssid = (netsh wlan show interfaces | Select-String 'SSID' | Select-Object -First 1).ToString().Split(':')[1].Trim()
-netsh wlan show profile name="$ssid" key=clear | Select-String "Key Content"
-```
-
----
-
-
----
-
-## 37. Finding Your External (Public) IP Address
-
-### ✅ PowerShell (Windows)
-
-```powershell
-Invoke-RestMethod -Uri "https://api.ipify.org?format=text"
-Invoke-RestMethod -Uri "https://ifconfig.me/ip"
-Invoke-RestMethod -Uri "https://checkip.amazonaws.com"
-```
-
-### ✅ CMD (Windows)
-
-```cmd
-curl https://api.ipify.org
-curl ifconfig.me
-```
-
-> Windows 10+ includes `curl` by default.
-
----
-
-### ✅ Linux / macOS
-
-```bash
-curl -s https://ipinfo.io/ip
-curl -s https://icanhazip.com
-curl -s ifconfig.me
-```
-
----
-
-### ✅ DNS-Based Lookup (Linux/macOS/WSL)
-
-```bash
-dig +short myip.opendns.com @resolver1.opendns.com
-```
-
----
-
-### ✅ Web-Based Tools
-
-- https://whatismyipaddress.com
-- https://ipinfo.io
-- https://ifconfig.me
-- https://checkip.amazonaws.com
-
----
-
-## 20. Retrieve Manufacturer, Model, and Serial Number
-
-Get-CimInstance Win32_ComputerSystem and Win32_BIOS.
-
----
-
-## 21. Get Windows Version, Build, and Latest Patch
-
-PowerShell: Get-ComputerInfo, Get-HotFix; systeminfo in CMD.
-
----
-
-## 22. View Windows Install Date / First Boot Time
-
-Get-CimInstance Win32_OperatingSystem or Event ID 12.
-
----
-
-## 29. Windows Experience Index (WEI) Score via CLI
-
-winsat formal; Get-CimInstance Win32_WinSAT.
-
----
----
-
-## 27. Battery Health for Laptops (CLI)
-
-Windows: powercfg /batteryreport; Linux: upower; macOS: system_profiler.
-
----
-
-## 26. CPU, GPU, and Drive Temperature Checks
-
-LibreHardwareMonitorCLI, smartctl, lm-sensors, nvme-cli.
-
----
-
-## 25. SMART Drive Health via CLI
-
-smartctl, Get-PhysicalDisk, CrystalDiskInfo, PowerShell health checks.
-
----
-
-## 23. Check for Bad Clusters on Disk
-
-CHKDSK read-only or /r, PowerShell log parsing, Get-WinEvent.
-
----
-
-## 24. Estimate Format Date via Volume ID or Root Folder
-
-fsutil, vol, (Get-Item C:\).CreationTime, Registry InstallDate.
-
----
-
-## 1. Antivirus / Malware Detection
-
-Includes EICAR test file, AMTSO tests, and browser-based security checkers.
-
----
-
-## 3. Content Filtering & DNS
-
-Test sites for DNSFilter, OpenDNS, NextDNS, FortiGuard, etc.
-
----
-
-## 4. Email Security & SMTP Testing
-
-Using telnet and PowerShell to verify SMTP, POP3, IMAP, SPF, DKIM, DMARC.
-
----
-
-## 8. Logging / Endpoint / SIEM Testing
-
-Triggering and detecting USB insertions, login failures, and event log entries.
-
----
-
-## 7. Authentication, Identity, and Policy
-
-Check MFA, password policies, Secure Score, HaveIBeenPwned.
-
----
-
-## 9. Web App Headers & Security
-
-SecurityHeaders.com, Mozilla Observatory.
-
----
-
-## 6. SSL/TLS Certificate & Web Security
-
-SSL Labs, Hardenize, BadSSL, and openssl s_client for manual checks.
-
----
-
-## 10. Port & Service Discovery
-
-Nmap, netcat, Shodan, banner grabbing.
-
----
-
-## 18. Manual Protocol Testing
-
-SMTP, POP3, IMAP, HTTP, FTP, SSH, RDP, NTP via telnet, netcat, PowerShell.
-
----
-
-## 17. Domain & DNS Investigation Tools
-
-whois, dig, host, MXToolbox, ViewDNS, DNSViz.
-
----
-
-## 32. Startup Programs – Identifying Non-Microsoft Auto-Starts
-
-### ✅ PowerShell
-
-```powershell
-Get-ItemProperty HKCU:\Software\Microsoft\Windows\CurrentVersion\Run
-Get-ItemProperty HKLM:\Software\Microsoft\Windows\CurrentVersion\Run
-```
-
-### ✅ Scheduled Tasks That Auto-Start
-
-```powershell
-Get-ScheduledTask | Where-Object { $_.TaskPath -like "*\*" -and $_.State -eq "Ready" }
-```
-
-### ✅ wmic Startup List
-
-```cmd
-wmic startup get caption, command
-```
-
-### ✅ Autoruns (Sysinternals)
+#### 🧪 Use CLI Mode (for remote or scripted use)
 
 ```cmd
 autorunsc.exe -nobanner -h > autoruns_filtered.txt
 ```
 
+- `-h` hides Microsoft entries
+- `-nobanner` suppresses the Sysinternals intro text
+
 ---
 
-## 33. Clean Browser Launch for Troubleshooting
+### 💡 Live Share or Field Diagnostic Use
 
-### Microsoft Edge
+If troubleshooting a client PC:
+
+- Place **Autoruns** on a network share or USB stick
+- Launch directly:
 
 ```cmd
-start msedge --guest
-start msedge --profile-directory="Profile 2"
+\live-share\tools\autoruns\autoruns.exe
 ```
 
-### Google Chrome
+Or map the share:
 
 ```cmd
-start chrome --guest
-start chrome --user-data-dir="%TEMP%\ChromeTemp"
+net use Z: \live-share\tools
+Z:\autoruns\autoruns.exe
 ```
 
-### Mozilla Firefox
+This avoids leaving tools permanently on the client system.
+
+---
+
+---
+
+## 🌐 Network Activity Tools – TCPView and Netstat
+
+### 🛰️ TCPView (Sysinternals)
+
+**TCPView** provides a real-time list of all TCP and UDP endpoints on your system:
+
+- Shows process name, PID, local/remote addresses, ports, and connection state
+- Can be sorted and filtered
+- Allows killing or closing connections
+
+#### ✅ Download:
+- https://learn.microsoft.com/sysinternals/downloads/tcpview
+
+#### ✅ Launch:
 
 ```cmd
-firefox --safe-mode
-firefox -no-remote -profile "%TEMP%\FirefoxTemp"
+tcpview.exe
 ```
 
-Use `firefox -P` to manage profiles.
+Use the toolbar to:
+- Refresh quickly
+- Highlight new or closed connections
+- Close or terminate suspicious processes
+
+> Great for catching apps phoning home, malware, or debugging port use.
 
 ---
 
-## 13. Patch & Deployment Verification
+### 📡 Netstat (Built-In Windows Tool)
 
-Intune, WSUS, SCCM, Windows Update logs, recent patches.
+**Netstat** provides snapshot-style network info via command line.
 
----
-
-## 15. Certificate Expiration Monitoring
-
-SSL expiration with PowerShell or openssl; internal PKI checks.
-
----
-
-## 14. User Awareness / Phishing Simulation
-
-Gophish, KnowBe4, user reporting validation.
-
----
-
-## 16. Misc Tools
-
-CIS-CAT, Microsoft SCT, Wireshark, Netcat, CrystalDiskInfo.
-
----
-
-## 36. Infrastructure Tests: Intune, Active Directory, Web, SQL, Hypervisors
-
-### 🎯 Microsoft Intune (Endpoint Manager)
-
-- Open **Company Portal** on enrolled devices and check for sync:
-  ```powershell
-  dsregcmd /status
-  ```
-  Check `Device State` and `AzureAdJoined`/`Intune MDM`.
-
-- Force sync:
-  ```powershell
-  Start-ScheduledTask -TaskName "PushLaunch"
-  ```
-
-- Review logs:
-  - `C:\ProgramData\Microsoft\IntuneManagementExtension\Logs`
-  - Event Viewer → Applications and Services Logs → Microsoft → Windows → DeviceManagement-Enterprise-Diagnostics-Provider
-
----
-
-### 🧪 Active Directory Health Checks
-
-#### ✅ Check Domain Controller Health
+#### ✅ Common Usage:
 
 ```cmd
-dcdiag /v
+netstat -ano
 ```
 
-#### ✅ Check Replication Status
+- `-a` = show all connections and listening ports
+- `-n` = show addresses numerically (skip DNS lookup)
+- `-o` = show the owning process ID (PID)
 
-```cmd
-repadmin /replsummary
-repadmin /showrepl
-```
-
-#### ✅ Confirm AD Auth and DNS
-
-```cmd
-nltest /dsgetdc:domain.com
-```
-
----
-
-### 🌐 Web Servers / Websites
-
-#### ✅ Test HTTP/HTTPS Access
+To match PID to process name:
 
 ```powershell
-Invoke-WebRequest -Uri https://yoursite.com -UseBasicParsing
+Get-Process -Id <PID>
 ```
 
-#### ✅ DNS and Response Checks
+#### ✅ Example:
 
 ```cmd
-nslookup yoursite.com
-ping yoursite.com
+netstat -anob
 ```
 
-#### ✅ Port and Header Check
+- `-b` shows which executable is responsible for each connection  
+  *(requires elevated CMD)*
 
-```bash
-curl -I https://yoursite.com
-```
-
-Check for response code (`200 OK`, `403 Forbidden`, etc.)
+> Use this when TCPView isn't available or for scripting.
 
 ---
 
-### 🗄 SQL Server Testing
-
-#### ✅ Check SQL Service Status (Windows)
-
-```powershell
-Get-Service -Name *SQL*
-```
-
-#### ✅ Test SQL Connectivity (PowerShell)
-
-```powershell
-Invoke-Sqlcmd -ServerInstance "SQLSERVER\INSTANCE" -Query "SELECT @@VERSION"
-```
-
-Requires the **SQL Server module** installed:
-```powershell
-Install-Module -Name SqlServer
-```
-
-#### ✅ T-SQL from SQLCMD (CMD)
-
-```cmd
-sqlcmd -S SQLSERVER\INSTANCE -Q "SELECT name FROM sys.databases"
-```
-
 ---
 
-### 💻 VMware & Hyper-V Testing
+### 💡 Tip: Run Sysinternals Tools Without Downloading
 
-#### ✅ VMware PowerCLI (VMware)
+Most Sysinternals tools can be run directly over the internet or from a network share:
 
-- Connect:
-  ```powershell
-  Connect-VIServer -Server vcenter.domain.com
-  ```
+#### ✅ Run from Sysinternals Live Share
 
-- List VMs and power states:
-  ```powershell
-  Get-VM | Select Name, PowerState
-  ```
+You can run any tool directly using:
 
-- Check snapshots:
-  ```powershell
-  Get-Snapshot
-  ```
+```cmd
+\live.sysinternals.com	ools\ToolName.exe
+```
 
-- Monitor host resource usage:
-  ```powershell
-  Get-VMHost | Select Name, CpuUsageMHz, MemoryUsageMB
-  ```
+Examples:
 
-#### ✅ Hyper-V (Windows PowerShell)
+```cmd
+\live.sysinternals.com	oolsutoruns.exe
+\live.sysinternals.com	ools\procexp.exe
+\live.sysinternals.com	ools	cpview.exe
+```
 
-- List VMs:
-  ```powershell
-  Get-VM
-  ```
+> No need to download manually — just run from the Start → Run dialog or elevated Command Prompt.
 
-- Check network adapters:
-  ```powershell
-  Get-VMNetworkAdapter
-  ```
+#### ✅ Run from Your Own Shared Tools Folder
 
-- Test virtual switch:
-  ```powershell
-  Get-VMSwitch
-  ```
+If deploying tools from a central server, place them on a network share:
+
+```cmd
+\yourserver	oolsutoruns.exe
+\fileserverdmin\sysinternals	cpview.exe
+```
+
+Or map the drive first:
+
+```cmd
+net use Z: \yourserver	ools
+Z:	cpview.exe
+```
 
 ---
 
 
 ---
 
-## 28. Reliability Monitor Access via CLI
+## 🧭 Editing the Windows Hosts File – Protections and Workarounds
 
-perfmon /rel; Get-WinEvent -LogName Microsoft-Windows-Reliability-Analysis-Component.
+The `hosts` file in Windows is commonly used to override DNS resolution, but modern systems implement protections to prevent abuse.
 
----
+### 📄 Location of the Hosts File
 
-## 31. Common Technician Tasks in Safe Mode and How to Enable Them
-
-Safe Mode is a minimal environment useful for diagnostics and repair. Some tools and services require manual enabling.
-
-### ✅ Common Tasks and Requirements
-
-| Task                           | Requires Extra Steps? | Notes |
-|--------------------------------|------------------------|-------|
-| Uninstall Programs             | ✔️ Yes                | Enable Windows Installer via registry + `net start msiserver` |
-| System Restore                 | ❌ No                 | Use `rstrui.exe` or System Restore from Safe Mode |
-| Run Anti-Malware Scans         | ❌ CLI / ✔️ GUI       | GUI-based tools may need extra services |
-| Edit Registry (`regedit`)      | ❌ No                 | Works natively |
-| Disable Startup Items          | ❌ No                 | Use `msconfig` or Registry |
-| Run `CHKDSK`, `SFC`, `DISM`    | ❌ Mostly             | `DISM` may need `wuauserv` and `bits` |
-| Update Drivers                 | ✔️ Yes                | Driver installation services disabled by default |
-| Use Device Manager             | ❌ GUI OK             | May not auto-detect devices |
-| Networking Commands (ping, etc.) | ❌ in SM w/ Network  | Requires "Safe Mode with Networking" option |
-| View Event Logs                | ❌ No                 | Use `eventvwr.msc` or PowerShell |
-| File Recovery / Copy Locked Files | ❌ No              | Safe Mode unlocks many files |
-| Create/Delete Local Users      | ❌ No                 | Use `net user` or `lusrmgr.msc` |
-| Task Scheduler Use             | ✔️ Yes                | `Schedule` service disabled |
-| Run PowerShell Scripts         | ❌ Mostly             | Depends on services used in the script |
-
----
-
-### 🔧 Registry Keys to Enable Services in Safe Mode
-
-To enable services, use:
-
-```cmd
-reg add "HKLM\SYSTEM\CurrentControlSet\Control\SafeBoot\Minimal\<ServiceName>" /VE /T REG_SZ /D "Service" /F
-```
-
-Common services:
-
-```cmd
-reg add "HKLM\SYSTEM\CurrentControlSet\Control\SafeBoot\Minimal\MSIServer" /VE /T REG_SZ /D "Service" /F
-reg add "HKLM\SYSTEM\CurrentControlSet\Control\SafeBoot\Minimal\wuauserv" /VE /T REG_SZ /D "Service" /F
-reg add "HKLM\SYSTEM\CurrentControlSet\Control\SafeBoot\Minimal\BITS" /VE /T REG_SZ /D "Service" /F
-reg add "HKLM\SYSTEM\CurrentControlSet\Control\SafeBoot\Minimal\TrustedInstaller" /VE /T REG_SZ /D "Service" /F
-```
-
-Start the services (if needed):
-
-```cmd
-net start msiserver
-net start wuauserv
-net start bits
-net start trustedinstaller
-```
-
-> Use caution: enabling services in Safe Mode should be temporary.
-
----
-
----
-
-## 30. Booting to Safe Mode and Removing Updates
-
-### 🧰 Force Boot to Safe Mode (Windows)
-
-#### A. Use System Configuration (GUI or CLI)
-
-```cmd
-msconfig
-```
-
-- Go to the **Boot** tab
-- Check **Safe Boot**
-- Choose Minimal, Alternate Shell, or Network
-
-#### B. Force Safe Mode via Command Line
-
-```cmd
-bcdedit /set {current} safeboot minimal
-```
-
-To include networking:
-
-```cmd
-bcdedit /set {current} safeboot network
-```
-
-**Revert (boot normal again):**
-
-```cmd
-bcdedit /deletevalue {current} safeboot
+```plaintext
+C:\Windows\System32\drivers\etc\hosts
 ```
 
 ---
 
-### 🖥 Prompt for Boot Options on Next Restart
+### 🔒 Protections That May Interfere
+
+#### 1. UAC and Admin Rights
+
+You must edit the hosts file with elevated permissions:
 
 ```cmd
-shutdown /r /o /f /t 0
+notepad C:\Windows\System32\drivers\etc\hosts
 ```
 
-- Forces a reboot into **Windows Recovery Options**
-- From there, you can select **Startup Settings → Enable Safe Mode**
+> Right-click Notepad → **Run as administrator** before opening the file.
 
 ---
 
-### 🛠 Enable Program Uninstall in Safe Mode
+#### 2. Windows Defender Tamper Protection
 
-Safe Mode disables the Windows Installer service. To enable it:
+Defender may block edits to the hosts file, especially redirections to Microsoft, antivirus, or update domains.
 
-```cmd
-reg add "HKLM\SYSTEM\CurrentControlSet\Control\SafeBoot\Minimal\MSIServer" /VE /T REG_SZ /D "Service" /F
-net start msiserver
-```
+- Disable Tamper Protection (if necessary) from:
+  - **Windows Security** → **Virus & threat protection**
+  - Click **Manage settings**
+  - Turn off **Tamper Protection**
 
-For Safe Mode with Networking:
-
-```cmd
-reg add "HKLM\SYSTEM\CurrentControlSet\Control\SafeBoot\Network\MSIServer" /VE /T REG_SZ /D "Service" /F
-```
-
-This allows uninstallation of programs while in Safe Mode.
+> 🔁 Re-enable it after testing.
 
 ---
 
-### 🔍 List Recently Installed Updates (Even from Safe Mode)
+#### 3. Controlled Folder Access or 3rd-party AV
 
-```powershell
-Get-HotFix | Sort-Object InstalledOn -Descending | Select-Object -First 10
-```
+Controlled folder access may block apps from writing to `System32`.
 
-Or from CMD:
-
-```cmd
-wmic qfe list brief /format:table
-```
+- Add your editor (e.g., Notepad++) to the list of allowed apps.
 
 ---
 
-### ❌ Uninstall a Problematic Update in Safe Mode or Recovery
+### ⚙️ PowerToys Hosts File Editor
 
-#### A. From Safe Mode
+Microsoft PowerToys includes a **Hosts File Editor** with built-in elevation and structured UI.
 
-```cmd
-wusa /uninstall /kb:5037771 /quiet /norestart
-```
+- Download PowerToys: [https://github.com/microsoft/PowerToys](https://github.com/microsoft/PowerToys)
+- Open **PowerToys → Hosts File Editor**
+- Add or edit entries with validation
 
-Replace `5037771` with the KB number.
+> 🟢 Useful for quickly enabling/disabling entries or avoiding formatting errors.
 
-#### B. From Recovery Command Prompt (WinRE)
+---
 
-1. Boot from installation/recovery media
-2. Choose **Repair your computer**
-3. Open **Command Prompt**
-4. Determine system drive:
-   ```cmd
-   diskpart
-   list volume
-   exit
-   ```
-5. Uninstall update:
-   ```cmd
-   dism /image:D:\ /remove-package /PackageName:Package_for_KB5037771
+### 🧪 Testing Hosts File Changes
+
+1. Add an entry like:
+
+   ```plaintext
+   127.0.0.1 facebook.com
    ```
 
-Use:
+2. Test using:
 
-```cmd
-dism /image:D:\ /get-packages
-```
-
-To list package names first (replace `D:` with actual Windows partition).
-
----
-
-## Notes
-
-- Always back up before uninstalling updates manually
-- System Restore or full backup tools are safer for rollback
-
----
----
-
-## 38. Listing Local Accounts and Checking If They're Microsoft or Local
-
-### ✅ PowerShell – List All Local Accounts with Status
-
-```powershell
-Get-LocalUser | Select-Object Name, Enabled, LastLogon
-```
-
-- Shows local (non-domain) accounts
-- `Enabled = False` means the account is disabled
-
----
-
-### ✅ PowerShell – WMI Query for SID and Account Type
-
-```powershell
-Get-WmiObject Win32_UserAccount | Where-Object { $_.LocalAccount -eq $true } |
-Select-Object Name, Disabled, SID, LocalAccount
-```
-
-- Local SIDs typically start with: `S-1-5-21`
-- Microsoft accounts: `S-1-12-1-...` or appear in `C:\Users` as email addresses
-
----
-
-### ✅ List Profiles and Infer Microsoft vs Local
-
-```powershell
-Get-ChildItem 'C:\Users' | Select-Object Name, LastWriteTime
-```
-
-Microsoft-connected accounts often have profile names like:
-- `user@example.com`
-- `MicrosoftAccount\...`
-
----
-
-### ✅ CMD Tools
-
-```cmd
-net user
-```
-
-Check details:
-
-```cmd
-net user username
-```
-
-Look for:
-- `Account active`
-- Local group membership
-- Logon script and password last set
-
----
-
-### 🛠 Optional: Full PowerShell Script to List Accounts
-
-```powershell
-$users = Get-WmiObject Win32_UserAccount | Where-Object { $_.LocalAccount -eq $true }
-
-foreach ($user in $users) {
-    $type = if ($user.SID -like "S-1-12-*") { "Microsoft Account" } else { "Local" }
-    [PSCustomObject]@{
-        Name     = $user.Name
-        Enabled  = -not $user.Disabled
-        SID      = $user.SID
-        Type     = $type
-    }
-}
-```
-
-This script identifies:
-- Name
-- Whether enabled
-- SID
-- Whether it appears to be a Microsoft account
-
----
-
----
-
-## 39. Activation and User Setup Recovery
-
-### ✅ Check Activation Status
-
-```powershell
-slmgr /xpr
-```
-
-- Shows if Windows is permanently activated or has a time-limited license.
-
-```powershell
-slmgr /dli
-slmgr /dlv
-```
-
-- DLI = basic license info
-- DLV = detailed license view
-
----
-
-### 🔑 Install or Change Product Key
-
-```powershell
-slmgr /ipk XXXXX-XXXXX-XXXXX-XXXXX-XXXXX
-slmgr /ato
-```
-
-- `/ipk` installs key
-- `/ato` activates with Microsoft
-
----
-
-### 👤 Create Local Account During OOBE (Windows 11/10)
-
-#### Method A: Disconnect from Internet Before Setup
-
-- At OOBE screen:
-  - Press **Shift + F10** to open command prompt
-  - Run:
-    ```cmd
-    oobeypassnro
-    ```
-  - This reboots and skips MSA requirement on next boot
-
-#### Method B: Create Local User from CMD
-
-```cmd
-net user LocalAdmin Pa$$word123 /add
-net localgroup administrators LocalAdmin /add
-```
-
-> Run during setup with Shift + F10 when allowed (offline-only).
-
----
-
-### 🔐 Reset Forgotten Local Password (Post-Utilman Fix)
-
-**Note:** Microsoft Defender and Secure Boot now block the `utilman.exe` trick in many cases.
-
-#### ✅ Updated Methods:
-
-1. **Boot from Windows or recovery USB**
-2. Choose **Repair your computer** → **Troubleshoot** → **Command Prompt**
-3. Load offline registry:
-    ```cmd
-    reg load HKLM\TEMP_HIVE C:\Windows\System32\Config\SAM
-    ```
-
-4. Use tools like:
-   - **Offline NT Password & Registry Editor** (bootable ISO)
-   - **Hiren's BootCD PE** (includes password reset GUI tools)
-   - **Reset Windows Password** (commercial tool)
-   - **Trinity Rescue Kit** (older but still works on legacy systems)
-
-> If BitLocker is enabled, these methods won't work unless you have the recovery key.
-
----
-
-
----
-
-### 🔐 Advanced: Password Reset by Editing SYSTEM Hive (CmdLine Trick)
-
-This method replaces the older `Utilman.exe` trick by modifying the `SYSTEM` registry hive to run `cmd.exe` at boot.
-
-#### ✅ Requirements
-
-- Bootable Windows installation media or recovery USB
-- Access to the target Windows partition (e.g., D:)
-
-#### 🛠 Steps
-
-1. Boot from recovery media → **Troubleshoot** → **Command Prompt**
-2. Find the Windows partition:
    ```cmd
-   diskpart
-   list volume
-   exit
+   ping facebook.com
    ```
 
-3. Load the SYSTEM hive:
-   ```cmd
-   reg load HKLM\offline D:\Windows\System32\Config\SYSTEM
+   Expected output:
+   ```
+   Pinging facebook.com [127.0.0.1]
    ```
 
-4. Inject command prompt at login:
+3. Or flush DNS and test:
+
    ```cmd
-   reg add "HKLM\offline\Setup" /v CmdLine /t REG_SZ /d "cmd.exe" /f
-   reg add "HKLM\offline\Setup" /v SetupType /t REG_DWORD /d 2 /f
+   ipconfig /flushdns
+   nslookup facebook.com
    ```
-
-5. Unload the hive:
-   ```cmd
-   reg unload HKLM\offline
-   ```
-
-6. Reboot the system. It will boot directly to a command prompt.
-
-7. Reset the password:
-   ```cmd
-   net user Mark NewPassword123
-   ```
-
-8. Cleanup (important!):
-   ```cmd
-   reg load HKLM\offline D:\Windows\System32\Config\SYSTEM
-   reg delete "HKLM\offline\Setup" /v CmdLine /f
-   reg delete "HKLM\offline\Setup" /v SetupType /f
-   reg unload HKLM\offline
-   ```
-
-> This method is effective and not currently blocked by most Windows Defender versions. Use responsibly.
-
----
-
----
-
-## 40. UUID vs GUID vs MAC Address – Understanding and Retrieving System Identifiers
-
-### 🔍 Definitions
-
-| Term  | Stands For                      | Description |
-|-------|----------------------------------|-------------|
-| UUID  | Universally Unique Identifier   | A 128-bit number used to uniquely identify information. Used in BIOS, VMware, etc. |
-| GUID  | Globally Unique Identifier      | Microsoft's implementation of UUIDs. Used in registry, COM objects, etc. |
-| MAC   | Media Access Control Address    | A 48-bit hardware address unique to a network interface (NIC) |
-
-> ❗ UUID and GUID are functionally equivalent formats.  
-A MAC address can be **embedded** in a UUID (in UUID version 1).
-
----
-
-### ✅ Get the System UUID (BIOS/Hardware)
-
-```powershell
-Get-CimInstance -Class Win32_ComputerSystemProduct | Select-Object UUID
-```
-
-This UUID is often used by asset systems and virtualization platforms (e.g., VMware).
-
----
-
-### ✅ Get a GUID for Software or Registry Use
-
-To generate a new GUID:
-
-```powershell
-[guid]::NewGuid()
-```
-
-Example output:
-```
-guid
-----
-54a2e3b2-cc4e-4d34-b55a-cf1f9e2112cb
-```
-
-Used for scripting, COM, MSI packages, etc.
-
----
-
-### ✅ Get MAC Addresses
-
-```powershell
-Get-NetAdapter | Select Name, MacAddress, Status
-```
-
-Or classic CMD:
-
-```cmd
-getmac /v
-```
-
----
-
-### 🔄 Can You Convert Between Them?
-
-- **UUID v1** includes a timestamp + MAC address.  
-You can extract the MAC if the UUID was generated that way.
-- UUIDs from BIOS or VMs may not follow UUIDv1 spec → can't extract MAC.
-- GUIDs are just formatted UUIDs — not convertible to MAC directly.
-
----
-
-### 📌 When They're Used
-
-| Use Case                   | ID Type  |
-|----------------------------|----------|
-| BIOS/VM Hardware Identity  | UUID     |
-| COM/Registry/Installers    | GUID     |
-| Network Device ID          | MAC      |
-| AD Computer Objects        | GUID     |
 
 ---
 
