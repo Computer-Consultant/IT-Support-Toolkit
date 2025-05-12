@@ -1,0 +1,15 @@
+name: Lint Batch Files
+on:
+  push:
+    paths: ["**/*.bat", "**/*.cmd"]
+  workflow_dispatch:
+jobs:
+  batch-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          sudo apt update
+          sudo apt install python3-pip -y
+          pip3 install batlint
+          find . -type f \( -iname "*.bat" -o -iname "*.cmd" \) -exec batlint {} +

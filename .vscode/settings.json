@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "*.hdc": "xml"
+    },
+    "editor.formatOnSave": true
+}

@@ -1,0 +1,14 @@
+name: Lint JSON and YAML
+on:
+  push:
+    paths: ["**/*.json", "**/*.yml", "**/*.yaml"]
+  workflow_dispatch:
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          npm install -g jsonlint yaml-lint
+          find . -name "*.json" -exec jsonlint -q {} +
+          find . -name "*.yml" -o -name "*.yaml" -exec yamllint {} +
