@@ -1,5 +1,10 @@
 
-# 🧰 IT Admin Troubleshooting Toolkit
+
+# 🧰 The IT Admin's Troubleshooting Toolkit
+## Practical Fixes, Diagnostics & Recovery for Windows Systems
+
+> 🗡️ Your Swiss Army Knife of IT Diagnostics & Fixes You’ll Actually Use
+
 
 A comprehensive reference for system troubleshooting and repair tools, processes, and diagnostics.
 
@@ -496,3 +501,91 @@ For feature updates and major cumulative rollups:
 
 ---
 
+
+---
+
+## ⚠️ Deprecated Windows Features & How to Re-enable Them
+
+Sometimes legacy devices or applications require older protocols or features that are disabled by default in modern Windows versions.
+
+### ✅ SMBv1 (Server Message Block v1)
+
+**Warning**: SMBv1 is deprecated and insecure. Only enable if absolutely necessary.
+
+- **Enable via Windows Features (GUI)**:
+  - Control Panel → Programs and Features → Turn Windows features on or off
+  - Check "SMB 1.0/CIFS File Sharing Support"
+
+- **Enable via PowerShell**:
+  ```powershell
+  Enable-WindowsOptionalFeature -Online -FeatureName SMB1Protocol -NoRestart
+  ```
+
+- **Disable after migration**:
+  ```powershell
+  Disable-WindowsOptionalFeature -Online -FeatureName SMB1Protocol -NoRestart
+  ```
+
+---
+
+### ✅ Internet Explorer Mode (for Legacy Web Apps)
+
+- IE is deprecated, but Edge has "IE Mode" for legacy apps.
+- Enable via Group Policy:
+  - Computer Configuration → Administrative Templates → Microsoft Edge → Configure Internet Explorer integration → Enable
+
+---
+
+### ✅ Telnet Client
+
+```powershell
+Enable-WindowsOptionalFeature -Online -FeatureName TelnetClient
+```
+
+- Useful for simple TCP port tests with legacy devices.
+
+---
+
+### ✅ DirectPlay (Old Games Support)
+
+```powershell
+Enable-WindowsOptionalFeature -Online -FeatureName DirectPlay -NoRestart
+```
+
+---
+
+### ✅ SNMP (Simple Network Management Protocol)
+
+```powershell
+Add-WindowsCapability -Online -Name "SNMP.Client~~~~0.0.1.0"
+```
+
+- Required by many legacy network printers and monitoring tools.
+
+---
+
+### ✅ Legacy Windows Photo Viewer
+
+Re-enable registry entries to use classic Windows Photo Viewer in Windows 10/11.
+- Guides available online; involves file association changes.
+
+---
+
+### ✅ Other Deprecated Components
+
+- **XPS Viewer**:
+  ```powershell
+  Add-WindowsCapability -Online -Name "XPS.Viewer~~~~0.0.1.0"
+  ```
+
+- **Windows Media Player** (optional in some editions):
+  ```powershell
+  Enable-WindowsOptionalFeature -Online -FeatureName WindowsMediaPlayer
+  ```
+
+---
+
+## 📝 Reminder:
+Always disable deprecated features after use, or isolate devices needing them for security.
+
+---
