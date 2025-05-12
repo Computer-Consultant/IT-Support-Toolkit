@@ -1,3 +1,8 @@
+---
+title: "The IT Admin's Troubleshooting Toolkit"
+layout: default
+---
+
 
 
 # 🧰 The IT Admin's Troubleshooting Toolkit
