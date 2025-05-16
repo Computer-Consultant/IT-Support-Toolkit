@@ -1,0 +1,19 @@
+name: Suggestion / Correction
+description: Propose a correction or improvement to the Toolkit content.
+title: "[Suggestion] <brief summary>"
+labels: [suggestion, content]
+body:
+  - type: textarea
+    id: suggestion-details
+    attributes:
+      label: Suggestion / Correction Details
+      description: Describe what content needs correction or improvement. Include section references if possible.
+      placeholder: "E.g., The Networking section could include 'Test-NetConnection' examples..."
+    validations:
+      required: true
+  - type: textarea
+    id: sources
+    attributes:
+      label: Sources / References (if applicable)
+      description: Provide links to official documentation or trusted sources supporting your suggestion.
+      placeholder: "https://learn.microsoft.com/..."
