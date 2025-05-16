@@ -1,0 +1,22 @@
+name: Convert Markdown to PDF
+
+on:
+  push:
+    paths:
+      - 'docs/index.md'
+
+jobs:
+  build-pdf:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install Pandoc
+        run: sudo apt-get install -y pandoc texlive
+      - name: Convert Markdown to PDF
+        run: |
+          pandoc docs/index.md -o docs/IT-Support-Toolkit.pdf
+      - name: Upload PDF Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: IT-Support-Toolkit-PDF
+          path: docs/IT-Support-Toolkit.pdf
